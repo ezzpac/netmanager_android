@@ -54,7 +54,7 @@ jobs:
     - name: Build with Buildozer
       run: |
         # Accept licenses and build
-        yes | buildozer android debug || true
+        yes | buildozer android debug
       env:
         USER: runner
 
