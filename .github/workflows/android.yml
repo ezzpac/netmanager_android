@@ -40,7 +40,6 @@ jobs:
           libtool-bin \
           cmake \
           python3-dev \
-          libexport-perl \
           libglib2.0-dev \
           libgstreamer1.0-dev \
           wget \
