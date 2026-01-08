@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
@@ -15,7 +15,7 @@ jobs:
     - name: Set up Jdk
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
+        java-version: '17'
         distribution: 'temurin'
 
     - name: Set up Python
@@ -45,13 +45,13 @@ jobs:
           wget \
           zip \
           unzip
+        pip install --user --upgrade pip
         pip install --user --upgrade "Cython<3.0" buildozer
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Build with Buildozer
       run: |
-        # Accept Android licenses before building
-        yes | buildozer android debug
+        buildozer android debug
       env:
         USER: runner
 
