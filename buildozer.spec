@@ -20,7 +20,7 @@ version = 1.0.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,flask,flask-sqlalchemy,werkzeug,jinja2,itsdangerous,click,openpyxl,jnius
+requirements = python3,kivy,flask,flask-sqlalchemy,openpyxl,jnius
 
 # (str) Custom source folders for requirements
 # (list) Permissions
@@ -75,7 +75,7 @@ android.archs = armeabi-v7a, arm64-v8a
 [buildozer]
 
 # (int) log level (0 = error only, 1 = info, 2 = debug (with command output))
-log_level = 2
+log_level = 1
 
 # (int) display warning if buildozer is run as root (0 = off, 1 = on)
 warn_on_root = 1
