@@ -53,8 +53,8 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Accept licenses and build
-        yes | buildozer android debug
+        # Build and capture output, show only error if failed
+        yes | buildozer android debug > build_output.log 2>&1 || (cat build_output.log | tail -n 200 && exit 1)
       env:
         USER: runner
 
