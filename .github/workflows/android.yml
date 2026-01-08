@@ -12,6 +12,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set up Jdk
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -21,17 +27,28 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          zip unzip openjdk-17-jdk \
-          libffi-dev libssl-dev \
-          libsqlite3-dev libbz2-dev \
-          libncurses5-dev libncursesw5-dev \
-          libreadline-dev liblzma-dev \
-          libgdbm-dev zlib1g-dev \
-          libstdc++6
-    
+          git \
+          zip \
+          unzip \
+          colormake \
+          build-essential \
+          libncurses5-dev \
+          zlib1g-dev \
+          libffi-dev \
+          libssl-dev \
+          pkg-config \
+          ant \
+          autoconf \
+          automake \
+          libtool \
+          libtool-bin \
+          cmake \
+          python3-dev \
+          libexport-perl \
+          libglib2.0-dev \
+          libgstreamer1.0-dev
         pip install --upgrade pip
-        pip install cython buildozer
-
+        pip install "Cython<3.0" buildozer kivy
 
     - name: Build with Buildozer
       run: |
