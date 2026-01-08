@@ -12,51 +12,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Jdk
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          git \
-          zip \
-          unzip \
-          colormake \
-          build-essential \
-          libncurses5-dev \
-          zlib1g-dev \
-          libffi-dev \
-          libssl-dev \
-          pkg-config \
-          ant \
-          autoconf \
-          automake \
-          libtool \
-          libtool-bin \
-          cmake \
-          python3-dev \
-          libexport-perl \
-          libglib2.0-dev \
-          libgstreamer1.0-dev
-        pip install --upgrade pip
-        pip install "Cython<3.0" buildozer kivy
-
     - name: Build with Buildozer
-      run: |
-        yes | buildozer android debug
-      continue-on-error: true
+      uses: ArtemSBulgakov/buildozer-action@v1
+      id: build
+      with:
+        command: buildozer android debug
+        buildozer_version: master
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: NetManager-APK
-        path: bin/*.apk
+        path: ${{ steps.build.outputs.filename }}
