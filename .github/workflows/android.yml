@@ -20,9 +20,18 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libexport-perl libglib2.0-dev libgstreamer1.0-dev
+        sudo apt-get install -y \
+          zip unzip openjdk-17-jdk \
+          libffi-dev libssl-dev \
+          libsqlite3-dev libbz2-dev \
+          libncurses5-dev libncursesw5-dev \
+          libreadline-dev liblzma-dev \
+          libgdbm-dev zlib1g-dev \
+          libstdc++6
+    
         pip install --upgrade pip
-        pip install buildozer kivy
+        pip install cython buildozer
+
 
     - name: Build with Buildozer
       run: |
