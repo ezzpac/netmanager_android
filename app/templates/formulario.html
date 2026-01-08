@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-bold">
+                    <i
+                        class="fas {% if 'Editar' in title %}fa-edit{% else %}fa-plus-circle{% endif %} me-2 text-primary"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nome_local" class="form-label">Nome / Local</label>
+                            <input type="text" class="form-control" id="nome_local" name="nome_local"
+                                value="{{ device.nome_local if device else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modelo" class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="modelo" name="modelo"
+                                value="{{ device.modelo if device else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ip" class="form-label">Endereço IP</label>
+                            <input type="text" class="form-control" id="ip" name="ip"
+                                value="{{ device.ip if device else '' }}" placeholder="Ex: 192.168.0.10" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="mac" class="form-label">Endereço MAC</label>
+                            <input type="text" class="form-control" id="mac" name="mac"
+                                value="{{ device.mac if device else '' }}" placeholder="Ex: 00:00:00:00:00:00">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="grupo_id" class="form-label">Grupo</label>
+                            <select class="form-select" id="grupo_id" name="grupo_id">
+                                <option value="" {% if not device or not device.grupo_id %}selected{% endif %}>Sem Grupo
+                                </option>
+                                {% for group in groups %}
+                                <option value="{{ group.id }}" {% if device and device.grupo_id==group.id %}selected{%
+                                    endif %}>
+                                    {{ group.nome_grupo }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo" class="form-label">Tipo de Dispositivo</label>
+                            <select class="form-select" id="tipo" name="tipo">
+                                <option value="3D" {% if device and device.tipo=='3D' %}selected{% endif %}>
+                                    3D</option>
+                                <option value="Celular" {% if device and device.tipo=='Celular' %}selected{% endif %}>
+                                    Celular</option>
+                                <option value="Console" {% if device and device.tipo=='Console' %}selected{% endif %}>
+                                    Console</option>
+                                <option value="Desktop" {% if device and device.tipo=='Desktop' %}selected{% endif %}>
+                                    Desktop</option>
+                                <option value="Firewall" {% if device and device.tipo=='Firewall' %}selected{% endif %}>
+                                    Firewall</option>
+                                <option value="Inkjet Multifuncional" {% if device and
+                                    device.tipo=='Inkjet Multifuncional' %}selected{% endif %}>Inkjet Multifuncional
+                                </option>
+                                <option value="Interruptor" {% if device and device.tipo=='Interruptor' %}selected{%
+                                    endif %}>Interruptor</option>
+                                <option value="LAN" {% if device and device.tipo=='LAN' %}selected{% endif %}>LAN
+                                </option>
+                                <option value="Laser Multifuncional" {% if device and
+                                    device.tipo=='Laser Multifuncional' %}selected{% endif %}>Laser Multifuncional
+                                </option>
+                                <option value="Notebook" {% if device and device.tipo=='Notebook' %}selected{% endif %}>
+                                    Notebook</option>
+                                <option value="Plotter" {% if device and device.tipo=='Plotter' %}selected{% endif %}>
+                                    Plotter</option>
+                                <option value="Portable" {% if device and device.tipo=='Portable' %}selected{% endif %}>
+                                    Portable</option>
+                                <option value="Roteador" {% if device and device.tipo=='Roteador' %}selected{% endif %}>
+                                    Roteador</option>
+                                <option value="Sensor" {% if device and device.tipo=='Sensor' %}selected{% endif %}>
+                                    Sensor</option>
+                                <option value="Servidor" {% if device and device.tipo=='Servidor' %}selected{% endif %}>
+                                    Servidor</option>
+                                <option value="Smart IR" {% if device and device.tipo=='Smart IR' %}selected{% endif %}>
+                                    Smart IR</option>
+                                <option value="Smart Speaker" {% if device and device.tipo=='Smart Speaker' %}selected{%
+                                    endif %}>Smart Speaker</option>
+                                <option value="Storage" {% if device and device.tipo=='Storage' %}selected{% endif %}>
+                                    Storage</option>
+                                <option value="Switch" {% if device and device.tipo=='Switch' %}selected{% endif %}>
+                                    Switch</option>
+                                <option value="Tablet" {% if device and device.tipo=='Tablet' %}selected{% endif %}>
+                                    Tablet</option>
+                                <option value="Térmica" {% if device and device.tipo=='Térmica' %}selected{% endif %}>
+                                    Térmica</option>
+                                <option value="Tomada" {% if device and device.tipo=='Tomada' %}selected{% endif %}>
+                                    Tomada</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="service_tag" class="form-label">Service Tag / Serial</label>
+                            <input type="text" class="form-control" id="service_tag" name="service_tag"
+                                value="{{ device.service_tag if device else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="usuario_atual" class="form-label">Usuário (WMI)</label>
+                            <input type="text" class="form-control" id="usuario_atual" name="usuario_atual"
+                                value="{{ device.usuario_atual if device else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" name="observacoes"
+                            rows="3">{{ device.observacoes if device else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('main.devices') }}" class="btn btn-light px-4">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

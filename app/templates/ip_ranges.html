@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Faixas de IP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-network-wired me-2 text-primary"></i> Faixas de Endereçamento IP</h2>
+        <p class="text-muted mb-0">Gerencie os limites de IP alocados para diferentes finalidades.</p>
+    </div>
+    <button type="button" class="btn btn-primary px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addRangeModal">
+        <i class="fas fa-plus me-2"></i> Nova Faixa
+    </button>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Rede</th>
+                        <th>Faixa (Final)</th>
+                        <th>Descrição / Finalidade</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for range in ranges %}
+                    <tr>
+                        <td><span class="badge bg-primary">{{ range.rede }}</span></td>
+                        <td>
+                            <span class="badge bg-secondary">.{{ range.faixa_inicio }}</span>
+                            <i class="fas fa-arrow-right mx-1 text-muted small"></i>
+                            <span class="badge bg-secondary">.{{ range.faixa_fim }}</span>
+                        </td>
+                        <td class="fw-bold">{{ range.descricao }}</td>
+                        <td class="text-end">
+                            <form action="{{ url_for('main.clear_ip_range_devices', id=range.id) }}" method="POST"
+                                class="d-inline"
+                                onsubmit="return confirm('ATENÇÃO: Isso excluirá PERMANENTEMENTE todos os dispositivos encontrados nesta faixa de IP ({{ range.rede }}.{{ range.faixa_inicio }} até {{ range.rede }}.{{ range.faixa_fim }}). Deseja continuar?')">
+                                <button type="submit" class="btn btn-sm btn-outline-warning me-1"
+                                    title="Limpar dispositivos escaneados nesta faixa">
+                                    <i class="fas fa-eraser me-1"></i> Limpar Dispositivos
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal"
+                                data-bs-target="#editRangeModal" data-id="{{ range.id }}" data-rede="{{ range.rede }}"
+                                data-start="{{ range.faixa_inicio }}" data-end="{{ range.faixa_fim }}"
+                                data-desc="{{ range.descricao }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form action="{{ url_for('main.delete_ip_range', id=range.id) }}" method="POST"
+                                class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Nenhuma faixa de IP cadastrada.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Faixa -->
+<div class="modal fade" id="addRangeModal" tabindex="-1" aria-labelledby="addRangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addRangeModalLabel">Nova Faixa de IP</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('main.add_ip_range') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rede" class="form-label">Rede (ex: 192.168.0)</label>
+                        <input type="text" class="form-control" id="rede" name="rede" required
+                            placeholder="Ex: 192.168.1">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label for="faixa_inicio" class="form-label">Início (0-255)</label>
+                            <input type="number" class="form-control" id="faixa_inicio" name="faixa_inicio" required
+                                min="0" max="255">
+                        </div>
+                        <div class="col-6">
+                            <label for="faixa_fim" class="form-label">Fim (0-255)</label>
+                            <input type="number" class="form-control" id="faixa_fim" name="faixa_fim" required min="0"
+                                max="255">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="descricao" name="descricao" required
+                            placeholder="Ex: IPs das Impressoras, Range DHCP">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4">Cadastrar Faixa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Faixa -->
+<div class="modal fade" id="editRangeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Faixa de IP</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form id="editRangeForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rede (ex: 192.168.0)</label>
+                        <input type="text" class="form-control" id="edit_rede" name="rede" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Início (0-255)</label>
+                            <input type="number" class="form-control" id="edit_faixa_inicio" name="faixa_inicio"
+                                required min="0" max="255">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Fim (0-255)</label>
+                            <input type="number" class="form-control" id="edit_faixa_fim" name="faixa_fim" required
+                                min="0" max="255">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="edit_descricao" name="descricao" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info text-white px-4">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var editRangeModal = document.getElementById('editRangeModal');
+    editRangeModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var id = button.getAttribute('data-id');
+        var rede = button.getAttribute('data-rede');
+        var start = button.getAttribute('data-start');
+        var end = button.getAttribute('data-end');
+        var desc = button.getAttribute('data-desc');
+
+        var modal = this;
+        modal.querySelector('#edit_rede').value = rede;
+        modal.querySelector('#edit_faixa_inicio').value = start;
+        modal.querySelector('#edit_faixa_fim').value = end;
+        modal.querySelector('#edit_descricao').value = desc;
+
+        var form = modal.querySelector('#editRangeForm');
+        // Construct the URL dynamically
+        form.action = "{{ url_for('main.ip_ranges') }}".replace('ip-ranges', 'ip-range/edit/' + id);
+    });
+</script>
+{% endblock %}

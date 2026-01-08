@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold"><i class="fas fa-tachometer-alt me-2 text-primary"></i> Visão Geral da Rede</h2>
+        <p class="text-muted">Resumo dos dispositivos e faixas de IP alocadas.</p>
+    </div>
+</div>
+
+<!-- Combined Stats Grid -->
+<div class="row mb-4">
+    <!-- Total Devices -->
+    <div class="col-xl-2 col-lg-3 col-md-4 col-6 mb-4">
+        <div class="card card-stats shadow-sm border-0 h-100 position-relative">
+            <div class="card-body p-3">
+                <a href="{{ url_for('main.devices') }}" class="stretched-link"></a>
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 bg-primary-subtle p-3 rounded-circle me-3">
+                        <i class="fas fa-server fa-lg text-primary"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-subtitle mb-1 text-muted small">Total</h6>
+                        <h3 class="card-title mb-0 fw-bold fs-4">{{ total_devices }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid (Sorted Alphabetically) -->
+    {% for stat in combined_stats %}
+    <div class="col-xl-2 col-lg-3 col-md-4 col-6 mb-4">
+        <div class="card shadow-sm border-0 h-100 border-start border-4 border-{{ stat.color }} position-relative">
+            <div class="card-body p-3">
+                <a href="{{ stat.url }}" class="stretched-link"></a>
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 bg-{{ stat.color }}-subtle p-3 rounded-circle me-3">
+                        <i class="fas {{ stat.icon }} fa-lg text-{{ stat.color }}"></i>
+                    </div>
+                    <div>
+                        <h6 class="card-subtitle mb-1 text-muted small text-truncate" style="max-width: 100px;"
+                            title="{{ stat.name }}">{{ stat.name }}</h6>
+                        <h3 class="card-title mb-0 fw-bold fs-4">{{ stat.count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    <!-- IP Range Distribution -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-bold"><i class="fas fa-map-marked-alt me-2 text-warning"></i>
+                    Distribuição
+                    de IP</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Faixa</th>
+                                <th>Descrição/Grupo</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ipr in ip_ranges %}
+                            <tr>
+                                <td>
+                                    <span
+                                        class="badge bg-primary-subtle text-primary border border-primary-subtle px-2">{{
+                                        ipr.rede }}</span><span class="badge bg-secondary px-2">.{{ ipr.faixa_inicio }}
+                                        – .{{ ipr.faixa_fim }}</span>
+                                </td>
+                                <td><span class="fw-bold">{{ ipr.descricao }}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1" style="height: 10px; border-radius: 5px;">
+                                            <div class="progress-bar {% if ipr.usage > 90 %}bg-danger{% elif ipr.usage > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                                role="progressbar" style="width: {{ ipr.usage }}%"
+                                                aria-valuenow="{{ ipr.usage }}" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small class="ms-2 fw-bold text-muted">{{ ipr.usage|round(1) }}%</small>
+                                    </div>
+                                    <small class="text-muted">{{ ipr.count }} / {{ ipr.total }} IPs</small>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.devices', network=ipr.rede, start=ipr.faixa_inicio, end=ipr.faixa_fim) }}"
+                                        class="btn btn-sm btn-outline-primary" title="Ver dispositivos nesta faixa">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Nenhuma faixa de IP cadastrada.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Distribution Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-bold"><i class="fas fa-chart-pie me-2 text-success"></i> Por Grupo
+                </h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="groupsChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const ctx = document.getElementById('groupsChart').getContext('2d');
+    const groupData = {
+        labels: [{% for stat in group_stats %}'{{ stat.name }}', {% endfor %}],
+    datasets: [{
+        data: [{% for stat in group_stats %}{{ stat.count }}, {% endfor %}],
+        backgroundColor: [
+            '#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754'
+        ],
+            hoverOffset: 4
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: groupData,
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

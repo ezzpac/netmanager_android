@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações e Backup{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-cog me-2 text-primary"></i> Configurações do Sistema</h2>
+        <p class="text-muted mb-0">Gerencie backups, restaurações e configurações gerais do sistema.</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Coluna Esquerda: Backup e Importação/Exportação -->
+    <div class="col-lg-6 mb-4">
+
+        <!-- Backup Total -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="card-title mb-0 fw-bold">
+                    <i class="fas fa-archive me-2"></i> XBackup e Restauração
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Fazer Backup -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-download me-2 text-primary"></i> Fazer Backup Completo
+                    </h6>
+                    <p class="text-muted small">Exporta todos os dados: usuários, dispositivos, configurações e logs.
+                    </p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('main.backup_database') }}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i> Baixar Backup Completo (ZIP)
+                        </a>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Restaurar Backup -->
+                <div>
+                    <h6 class="fw-bold mb-3"><i class="fas fa-upload me-2 text-danger"></i> Restaurar de Backup</h6>
+                    <form action="{{ url_for('main.restore_database') }}" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="backup_file" class="form-label small">Selecione o arquivo .zip ou .json</label>
+                            <input class="form-control form-control-sm" type="file" id="backup_file" name="backup_file"
+                                accept=".json,.zip" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Selecione o que deseja restaurar:</label>
+
+                            <div class="row g-2">
+                                <div class="col-md-4 col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="restore_users"
+                                            id="restore_users" checked>
+                                        <label class="form-check-label small" for="restore_users">
+                                            <i class="fas fa-users text-primary"></i> Usuários
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="restore_groups"
+                                            id="restore_groups" checked>
+                                        <label class="form-check-label small" for="restore_groups">
+                                            <i class="fas fa-layer-group text-info"></i> Grupos
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="restore_devices"
+                                            id="restore_devices" checked>
+                                        <label class="form-check-label small" for="restore_devices">
+                                            <i class="fas fa-laptop text-success"></i> Dispositivos
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="restore_ip_ranges"
+                                            id="restore_ip_ranges" checked>
+                                        <label class="form-check-label small" for="restore_ip_ranges">
+                                            <i class="fas fa-network-wired text-warning"></i> Faixas de IP
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="restore_logs"
+                                            id="restore_logs" checked>
+                                        <label class="form-check-label small" for="restore_logs">
+                                            <i class="fas fa-history text-secondary"></i> Logs
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="restore_config"
+                                            id="restore_config" checked>
+                                        <label class="form-check-label small" for="restore_config">
+                                            <i class="fas fa-cog text-dark"></i> Configurações
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2"
+                                onclick="selectAllRestore()">
+                                <i class="fas fa-check-double"></i> Selecionar Todos
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAllRestore()">
+                                <i class="fas fa-times"></i> Limpar Seleção
+                            </button>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-danger" onclick="return confirmRestore()">
+                                <i class="fas fa-upload me-2"></i> Restaurar Selecionados
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Importação/Exportação Excel -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-success text-white py-3">
+                <h5 class="card-title mb-0 fw-bold">
+                    <i class="fas fa-file-excel me-2"></i> Importação/Exportação Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Exportar -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-file-download me-2 text-success"></i> Exportar
+                        Dispositivos</h6>
+                    <p class="text-muted small">Exporta lista de dispositivos para Excel (.xlsx) organizado por faixas
+                        de IP.</p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('main.export_excel') }}" class="btn btn-success">
+                            <i class="fas fa-file-download me-2"></i> Exportar para Excel
+                        </a>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Importar -->
+                <div>
+                    <h6 class="fw-bold mb-3"><i class="fas fa-file-upload me-2 text-success"></i> Importar Dispositivos
+                    </h6>
+                    <form action="{{ url_for('main.import_excel') }}" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="excel_file" class="form-label small">Selecione o arquivo .xlsx</label>
+                            <input class="form-control form-control-sm" type="file" id="excel_file" name="excel_file"
+                                accept=".xlsx" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-file-upload me-2"></i> Importar do Excel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Direita: Configurações Gerais e Zona de Perigo -->
+    <div class="col-lg-6">
+
+        <!-- Configurações Gerais -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-bold text-secondary">
+                    <i class="fas fa-tools me-2"></i> Configurações Gerais
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Ícone do Sistema -->
+                <form action="{{ url_for('main.save_identity') }}" method="POST" class="mb-4">
+                    <label class="form-label fw-bold small text-muted">ÍCONE DO SISTEMA</label>
+                    <div class="d-flex flex-wrap gap-3 p-3 border rounded bg-light bg-opacity-10 mb-3">
+                        {% for icon in ['fas fa-network-wired', 'fas fa-server', 'fas fa-laptop-code', 'fas
+                        fa-shield-halved', 'fas fa-microchip', 'fas fa-globe'] %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="app_icon" id="icon_{{ loop.index }}"
+                                value="{{ icon }}" {% if app_icon==icon %}checked{% endif %}>
+                            <label class="form-check-label" for="icon_{{ loop.index }}">
+                                <i class="{{ icon }} fa-lg"></i>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Salvar Ícone</button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Nome do Sistema -->
+                <form action="{{ url_for('main.save_visual') }}" method="POST" class="mb-4">
+                    <label for="app_name" class="form-label fw-bold small">NOME DO SISTEMA</label>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text"><i class="fas fa-signature"></i></span>
+                        <input type="text" class="form-control" id="app_name" name="app_name" value="{{ app_name }}"
+                            required>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Atualizar Nome</button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Porta do Servidor -->
+                <form action="{{ url_for('main.save_port') }}" method="POST" class="mb-4">
+                    <label for="port" class="form-label fw-bold small">PORTA DO SERVIDOR</label>
+                    <small class="text-muted d-block mb-2">Requer reinicialização</small>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                        <input type="number" class="form-control" id="port" name="port" value="{{ current_port }}"
+                            min="1024" max="65535" required>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Salvar Porta</button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Backup Automático -->
+                <form action="{{ url_for('main.toggle_auto_backup') }}" method="POST">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="auto_backup"
+                            name="auto_backup" {% if auto_backup %}checked{% endif %} onchange="this.form.submit()">
+                        <label class="form-check-label fw-bold small" for="auto_backup">
+                            Backup Automático
+                        </label>
+                    </div>
+                    <small class="text-muted">Cria backup antes de importar/restaurar</small>
+                </form>
+            </div>
+        </div>
+
+        <!-- Zona de Perigo -->
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-bold text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Zona de Perigo
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">Ações permanentes e irreversíveis.</p>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#resetDataModal">
+                        <i class="fas fa-trash-alt me-2"></i> Excluir Todas as Informações
+                    </button>
+
+                    <form action="{{ url_for('main.clear_logs') }}" method="POST"
+                        onsubmit="return confirm('Tem certeza que deseja limpar todos os logs de atividade?')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                            <i class="fas fa-history me-2"></i> Limpar Logs do Sistema
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="resetDataModal" tabindex="-1" aria-labelledby="resetDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="resetDataModalLabel">⚠️ Confirmar Exclusão Total</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja <strong>excluir permanentemente</strong> todos os dados do sistema?</p>
+                <ul>
+                    <li>Todos os Dispositivos</li>
+                    <li>Todos os Grupos</li>
+                    <li>Todas as Faixas de IP</li>
+                    <li>Todos os Logs de Atividade</li>
+                </ul>
+                <p class="text-danger small"><strong>Atenção:</strong> Os usuários registrados não serão excluídos para
+                    evitar perda de acesso.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('main.reset_all') }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Sim, Excluir Tudo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectAllRestore() {
+        document.querySelectorAll('input[name^="restore_"]').forEach(cb => {
+            cb.checked = true;
+        });
+    }
+
+    function clearAllRestore() {
+        document.querySelectorAll('input[name^="restore_"]').forEach(cb => {
+            cb.checked = false;
+        });
+    }
+
+    function confirmRestore() {
+        const selected = [];
+        const checkboxes = {
+            'restore_users': 'Usuários',
+            'restore_groups': 'Grupos',
+            'restore_devices': 'Dispositivos',
+            'restore_ip_ranges': 'Faixas de IP',
+            'restore_logs': 'Logs de Atividade',
+            'restore_config': 'Configurações do Sistema'
+        };
+
+        for (const [name, label] of Object.entries(checkboxes)) {
+            if (document.getElementById(name).checked) {
+                selected.push(label);
+            }
+        }
+
+        if (selected.length === 0) {
+            alert('Por favor, selecione pelo menos um item para restaurar.');
+            return false;
+        }
+
+        const message = 'Tem certeza que deseja restaurar os seguintes itens?\n\n' +
+            selected.map(item => '• ' + item).join('\n') +
+            '\n\nOs dados atuais serão substituídos.';
+
+        return confirm(message);
+    }
+</script>
+{% endblock %}

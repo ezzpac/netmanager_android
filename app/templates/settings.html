@@ -1,0 +1,549 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações e Backup{% endblock %}
+
+{% block content %}
+<div class="container-xl" style="max-width: 1100px;">
+    <!-- Overlay de Encerramento -->
+    <div id="shutdownOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none"
+        style="z-index: 9999; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-white">
+            <div class="spinner-border text-danger mb-3" style="width: 3rem; height: 3rem;" role="status text-danger">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h3 class="fw-bold animate__animated animate__pulse animate__infinite">Encerrando Sistema...</h3>
+            <p class="text-white-50">Por favor, aguarde alguns instantes.</p>
+        </div>
+    </div>
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-cog me-2 text-primary"></i> Configurações do Sistema
+                <button type="button" class="btn btn-link text-danger p-0 ms-2" data-bs-toggle="modal"
+                    data-bs-target="#shutdownModal" title="Encerrar Sistema">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </h2>
+            <p class="text-muted mb-0">
+                Gerencie backups, restaurações e configurações gerais do sistema.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- 1. Configurações -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 settings-card">
+                <div class="card-header bg-white py-2">
+                    <h5 class="card-title mb-0 fw-bold text-secondary text-uppercase small">
+                        <i class="fas fa-tools me-2 text-primary"></i> Configurações do Sistema
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded bg-light bg-opacity-10 h-100">
+                                <label class="fw-bold small text-muted mb-1 d-block">SISTEMA</label>
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="{{ app_icon or 'fas fa-network-wired' }} fa-2x text-primary me-3"></i>
+                                    <div>
+                                        <div class="fw-bold text-truncate" style="max-width: 120px;">{{ app_name }}
+                                        </div>
+                                        <div class="small text-muted">Porta: {{ current_port }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded bg-light bg-opacity-10 h-100">
+                                <label class="fw-bold small text-muted mb-1 d-block">REDE / BACKUP</label>
+                                <div class="small mb-1 text-truncate">
+                                    <span class="fw-bold">Domínio:</span> {{ network_domain or 'N/A' }}
+                                </div>
+                                <div class="small d-flex align-items-center">
+                                    <span class="fw-bold me-2">Auto-Backup:</span>
+                                    {% if auto_backup %}<span
+                                        class="badge bg-success-soft text-success px-2 border border-success-subtle">Sim</span>{%
+                                    else %}<span
+                                        class="badge bg-secondary-soft text-secondary px-2 border border-secondary">Não</span>{%
+                                    endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid mt-auto">
+                        <button type="button" class="btn btn-outline-primary shadow-sm btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#editSettingsModal">
+                            <i class="fas fa-edit me-2"></i> Editar Configurações do Sistema
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Backup e Restauração -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 settings-card">
+                <div class="card-header bg-primary py-2 text-white">
+                    <h5 class="card-title mb-0 fw-bold text-uppercase small">
+                        <i class="fas fa-archive me-2"></i> Backup e Restauração
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="row g-3 mb-3 h-100">
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded bg-light bg-opacity-10 h-100">
+                                <h6 class="fw-bold mb-2 small text-primary"><i class="fas fa-download me-1"></i>
+                                    Exportar Tudo</h6>
+                                <p class="text-muted small mb-3">Gera um arquivo ZIP com todos os dados.</p>
+                                <div class="d-grid mt-auto">
+                                    <a href="{{ url_for('main.backup_database') }}"
+                                        class="btn btn-xs btn-outline-primary shadow-sm">Baixar ZIP</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded bg-light bg-opacity-10 h-100">
+                                <h6 class="fw-bold mb-2 small text-danger"><i class="fas fa-upload me-1"></i> Restaurar
+                                </h6>
+                                <p class="text-muted small mb-3">Recupere dados de um arquivo ZIP/JSON.</p>
+                                <div class="d-grid mt-auto">
+                                    <button type="button" class="btn btn-xs btn-danger shadow-sm" data-bs-toggle="modal"
+                                        data-bs-target="#restoreBackupModal">Abrir Restauração</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Excel -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success py-2 text-white">
+                    <h5 class="card-title mb-0 fw-bold text-uppercase small">
+                        <i class="fas fa-file-excel me-2"></i> Importação e Exportação (XLSX)
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted small mb-3">Use o Microsoft Excel para gerenciar dispositivos em massa.</p>
+                    <div class="row g-3 mt-auto">
+                        <div class="col-sm-6">
+                            <div class="d-grid">
+                                <a href="{{ url_for('main.export_excel') }}"
+                                    class="btn btn-sm btn-outline-success shadow-sm">
+                                    <i class="fas fa-download me-2"></i> Exportar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-sm btn-success shadow-sm" data-bs-toggle="modal"
+                                    data-bs-target="#importExcelModal">
+                                    <i class="fas fa-upload me-2"></i> Importar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Danger -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger py-2">
+                    <h5 class="card-title mb-0 fw-bold text-white text-uppercase small">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Zona de Perigo
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted small mb-3">Ações críticas que limpam logs ou apagam todo o banco de dados.</p>
+                    <div class="d-grid mt-auto">
+                        <button type="button" class="btn btn-sm btn-outline-danger shadow-sm" data-bs-toggle="modal"
+                            data-bs-target="#dangerZoneModal">
+                            <i class="fas fa-shield-alt me-2"></i> Acessar Opções Críticas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Restaurar Backup -->
+    <div class="modal fade" id="restoreBackupModal" tabindex="-1" aria-labelledby="restoreBackupModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <form action="{{ url_for('main.restore_database') }}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold" id="restoreBackupModalLabel">
+                            <i class="fas fa-upload me-2"></i> Restaurar Backup do Sistema
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-warning mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Aviso:</strong> A restauração irá sobrescrever os dados selecionados. Recomendamos
+                            fazer
+                            um backup antes de prosseguir.
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">1. Selecione o arquivo de backup (.zip ou .json)</label>
+                            <input class="form-control" type="file" name="backup_file" accept=".json,.zip" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">2. Selecione o que deseja restaurar</label>
+                            <div class="row g-3 p-3 bg-light rounded border">
+                                {% for name, label, icon in [
+                                ('restore_users','Usuários','users'),
+                                ('restore_groups','Grupos','layer-group'),
+                                ('restore_devices','Dispositivos','laptop'),
+                                ('restore_ip_ranges','Faixas IP','network-wired'),
+                                ('restore_logs','Logs','history'),
+                                ('restore_config','Configurações','cog')
+                                ] %}
+                                <div class="col-6 col-md-4">
+                                    <div class="form-check card-check p-2 border rounded bg-white h-100">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" name="{{ name }}"
+                                            id="modal_{{ name }}" checked>
+                                        <label class="form-check-label small" for="modal_{{ name }}">
+                                            <i class="fas fa-{{ icon }} text-primary me-1"></i> {{ label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3 d-flex gap-2">
+                                <button type="button" class="btn btn-xs btn-outline-secondary"
+                                    onclick="selectAllRestore()">
+                                    Selecionar Todos
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary"
+                                    onclick="clearAllRestore()">
+                                    Limpar Seleção
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger px-4" onclick="return confirmRestore()">
+                            <i class="fas fa-check-circle me-1"></i> Iniciar Restauração
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Importar Excel -->
+    <div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg">
+                <form action="{{ url_for('main.import_excel') }}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title fw-bold" id="importExcelModalLabel">
+                            <i class="fas fa-file-excel me-2"></i> Importar Dados via Excel
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-muted small mb-4">
+                            Selecione uma planilha XLSX formatada corretamente para atualizar ou adicionar novos
+                            dispositivos. O sistema usará o endereço IP como identificador.
+                        </p>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Selecione a planilha (.xlsx)</label>
+                            <input class="form-control" type="file" name="excel_file" accept=".xlsx" required>
+                        </div>
+                        <div class="alert alert-info py-2 small mb-0">
+                            <i class="fas fa-info-circle me-1"></i> Use a planilha exportada como modelo para garantir a
+                            compatibilidade.
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="fas fa-upload me-1"></i> Importar Agora
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Exclusão Total -->
+    <div class="modal fade" id="resetDataModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">Confirmar Exclusão Total</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <i class="fas fa-exclamation-triangle text-danger fa-4x mb-3"></i>
+                    <h4 class="fw-bold">Atenção!</h4>
+                    <p>Esta ação é <strong>irreversível</strong>. Todos os dispositivos, grupos, faixas de IP e logs
+                        serão
+                        permanentemente excluídos do banco de dados.</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form action="{{ url_for('main.reset_all') }}" method="POST">
+                        <button type="submit" class="btn btn-danger px-4">Excluir Tudo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Configurações -->
+    <div class="modal fade" id="editSettingsModal" tabindex="-1" aria-labelledby="editSettingsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="editSettingsLabel">
+                        <i class="fas fa-cog me-2"></i> Configurações do Sistema
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <!-- Coluna 1: Identidade -->
+                        <div class="col-md-6 border-end">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-palette me-2"></i> Identidade Visual
+                            </h6>
+
+                            <!-- Ícone do Sistema -->
+                            <form action="{{ url_for('main.save_identity') }}" method="POST" class="mb-4">
+                                <label class="form-label fw-bold small text-muted">ÍCONE DO SISTEMA</label>
+                                <div class="d-flex flex-wrap gap-2 p-2 border rounded bg-light bg-opacity-10 mb-2">
+                                    {% for icon in [
+                                    'fas fa-network-wired',
+                                    'fas fa-server',
+                                    'fas fa-laptop-code',
+                                    'fas fa-shield-halved',
+                                    'fas fa-microchip',
+                                    'fas fa-globe'
+                                    ] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="app_icon"
+                                            id="modal_icon_{{ loop.index }}" value="{{ icon }}" {% if app_icon==icon
+                                            %}checked{% endif %}>
+                                        <label class="form-check-label" for="modal_icon_{{ loop.index }}">
+                                            <i class="{{ icon }} fa-lg"></i>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Salvar Ícone</button>
+                                </div>
+                            </form>
+
+                            <hr class="my-3 opacity-25">
+
+                            <!-- Nome do Sistema -->
+                            <form action="{{ url_for('main.save_visual') }}" method="POST">
+                                <label for="modal_app_name" class="form-label fw-bold small text-muted">NOME DO
+                                    SISTEMA</label>
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text"><i class="fas fa-signature"></i></span>
+                                    <input type="text" class="form-control" id="modal_app_name" name="app_name"
+                                        value="{{ app_name }}" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Atualizar Nome</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Coluna 2: Infraestrutura -->
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-server me-2"></i> Infraestrutura e Rede
+                            </h6>
+
+                            <!-- Porta do Servidor -->
+                            <form action="{{ url_for('main.save_port') }}" method="POST" class="mb-4">
+                                <label for="modal_port" class="form-label fw-bold small text-muted">PORTA DO
+                                    SERVIDOR</label>
+                                <div class="input-group input-group-sm mb-1">
+                                    <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                                    <input type="number" class="form-control" id="modal_port" name="port"
+                                        value="{{ current_port }}" min="1024" max="65535" required>
+                                </div>
+                                <small class="text-muted d-block mb-2 italic" style="font-size: 0.75rem;">* Requer
+                                    reinicialização do serviço</small>
+                                <div class="d-grid">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Salvar Porta</button>
+                                </div>
+                            </form>
+
+                            <hr class="my-3 opacity-25">
+
+                            <!-- Domínio -->
+                            <form action="{{ url_for('main.save_domain') }}" method="POST" class="mb-4">
+                                <label for="modal_domain" class="form-label fw-bold small text-muted">DOMÍNIO DA
+                                    REDE</label>
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                                    <input type="text" class="form-control" id="modal_domain" name="domain"
+                                        value="{{ network_domain }}" placeholder="Ex: MEUDOMINIO">
+                                </div>
+                                <div class="d-grid">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Salvar Domínio</button>
+                                </div>
+                            </form>
+
+                            <hr class="my-3 opacity-25">
+
+                            <!-- Backup Automático -->
+                            <form action="{{ url_for('main.toggle_auto_backup') }}" method="POST" class="mb-4">
+                                <div class="form-check form-switch p-2 border rounded bg-light bg-opacity-25">
+                                    <input class="form-check-input ms-0 me-2" type="checkbox" role="switch"
+                                        id="modal_auto_backup" name="auto_backup" {% if auto_backup %}checked{% endif %}
+                                        onchange="this.form.submit()">
+                                    <label class="form-check-label fw-bold small" for="modal_auto_backup">
+                                        Backup Automático Ativo
+                                    </label>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Shutdown -->
+    <div class="modal fade" id="shutdownModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header bg-danger text-white" style="border-radius: 14px 14px 0 0;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-power-off me-2"></i> Encerrar Aplicação
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-0 fw-bold">Deseja realmente encerrar o programa?</p>
+                    <p class="text-muted small mt-2 mb-0">Esta ação desligará o servidor e exigirá reinicialização
+                        manual.</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Não</button>
+                    <button class="btn btn-danger btn-sm px-4" onclick="shutdownApp()">Sim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="dangerZoneModal" tabindex="-1" aria-labelledby="dangerZoneLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold" id="dangerZoneLabel">
+                        <i class="fas fa-skull-crossbones me-2"></i> Opções Críticas do Sistema
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-danger mb-4 small">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>CUIDADO:</strong> As ações abaixo não podem ser desfeitas. Prossiga com extrema cautela.
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <!-- Limpar Logs -->
+                        <div class="p-3 border rounded border-danger-subtle bg-danger bg-opacity-10 text-center">
+                            <h6 class="fw-bold text-danger mb-2">Histórico de Logs</h6>
+                            <p class="text-muted small mb-3">Remove todos os registros de atividades recentes.</p>
+                            <form action="{{ url_for('main.clear_logs') }}" method="POST"
+                                onsubmit="return confirm('Tem certeza que deseja limpar todos os logs de atividade?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                    <i class="fas fa-history me-1"></i> Esvaziar Logs
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Excluir Tudo -->
+                        <div class="p-3 border rounded border-danger shadow-sm bg-white text-center">
+                            <h6 class="fw-bold text-danger mb-2">Exclusão Total</h6>
+                            <p class="text-muted small mb-3">Apaga dispositivos, grupos, faixas de IP e configurações.
+                            </p>
+                            <button type="button" class="btn btn-sm btn-danger w-100" data-bs-toggle="modal"
+                                data-bs-target="#resetDataModal" data-bs-dismiss="modal">
+                                <i class="fas fa-trash-alt me-1"></i> EXCLUIR TODOS OS DADOS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectAllRestore() {
+            document.querySelectorAll('input[name^="restore_"]').forEach(cb => cb.checked = true);
+        }
+
+        function clearAllRestore() {
+            document.querySelectorAll('input[name^="restore_"]').forEach(cb => cb.checked = false);
+        }
+
+        function confirmRestore() {
+            const checked = [...document.querySelectorAll('input[name^="restore_"]:checked')];
+            if (checked.length === 0) {
+                alert('Selecione pelo menos um item para restaurar.');
+                return false;
+            }
+            return confirm('Deseja restaurar os itens selecionados?');
+        }
+
+        async function shutdownApp() {
+            // Fecha o modal de confirmação se estiver aberto
+            const modalEl = document.getElementById('shutdownModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            // Exibe a tela de encerramento (overlay)
+            const overlay = document.getElementById('shutdownOverlay');
+            if (overlay) overlay.classList.remove('d-none');
+
+            try {
+                // Dispara o comando de encerramento
+                fetch("/shutdown", { method: "POST" });
+
+                // Aguarda 2 segundos para dar tempo do servidor processar
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } catch (err) {
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        }
+    </script>
+
+    {% endblock %}

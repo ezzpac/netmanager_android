@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Grupos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-layer-group me-2 text-primary"></i> Grupos de Dispositivos</h2>
+        <p class="text-muted mb-0">Organize seus dispositivos em grupos lógicos.</p>
+    </div>
+    <button type="button" class="btn btn-primary px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+        <i class="fas fa-plus me-2"></i> Novo Grupo
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nome do Grupo</th>
+                                <th class="text-center">Qtd. Dispositivos</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for group in groups %}
+                            <tr>
+                                <td class="fw-bold">{{ group.nome_grupo }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-info p-2">{{ group.devices|length }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <form action="{{ url_for('main.delete_group', id=group.id) }}" method="POST"
+                                        class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger btn-delete" {% if
+                                            group.devices|length> 0 %}disabled title="Grupo possui dispositivos"{% endif
+                                            %}>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Nenhum grupo cadastrado.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 bg-primary text-white">
+            <div class="card-body p-4">
+                <h5><i class="fas fa-info-circle me-2"></i> Ajuda</h5>
+                <p class="small mb-0">Grupos permitem filtrar dispositivos no dashboard e organizar o inventário por
+                    setor, andar ou finalidade técnica.</p>
+                <hr>
+                <p class="small mb-0"><strong>Nota:</strong> Grupos com dispositivos vinculados não podem ser excluídos
+                    por segurança.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Grupo -->
+<div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addGroupModalLabel">Novo Grupo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('main.add_group') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nome_grupo" class="form-label">Nome do Grupo</label>
+                        <input type="text" class="form-control" id="nome_grupo" name="nome_grupo" required
+                            placeholder="Ex: Financeiro, Servidores, Wi-Fi Visitantes">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4">Salvar Grupo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
