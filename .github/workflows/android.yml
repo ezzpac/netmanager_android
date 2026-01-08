@@ -7,20 +7,57 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Build with Buildozer
-      uses: ArtemSBulgakov/buildozer-action@v1
-      id: build
+    - name: Set up Jdk
+      uses: actions/setup-java@v3
       with:
-        command: buildozer android debug
-        buildozer_version: master
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          build-essential \
+          libncurses5-dev \
+          zlib1g-dev \
+          libffi-dev \
+          libssl-dev \
+          pkg-config \
+          ant \
+          autoconf \
+          automake \
+          libtool \
+          libtool-bin \
+          cmake \
+          python3-dev \
+          libexport-perl \
+          libglib2.0-dev \
+          libgstreamer1.0-dev \
+          wget \
+          zip \
+          unzip
+        pip install --user --upgrade "Cython<3.0" buildozer
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Build with Buildozer
+      run: |
+        # Accept Android licenses before building
+        yes | buildozer android debug
+      env:
+        USER: runner
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: NetManager-APK
-        path: ${{ steps.build.outputs.filename }}
+        path: bin/*.apk
