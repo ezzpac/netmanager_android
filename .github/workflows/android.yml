@@ -54,7 +54,7 @@ jobs:
     - name: Build with Buildozer
       run: |
         # Build and capture output, show only error if failed
-        yes | buildozer android debug > build_output.log 2>&1 || (cat build_output.log | tail -n 200 && exit 1)
+        yes | buildozer android debug
       env:
         USER: runner
 
